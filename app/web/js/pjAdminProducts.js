@@ -181,9 +181,14 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 				}
 			});
 		}
+		// function formatImage(val, obj) {
+		// 	var src = val ? val : 'app/web/img/backend/no_image.png';
+		// 	return ['<a href="index.php?controller=pjAdminProducts&action=pjActionUpdate&id=', obj.id ,'"><img src="', src, '" style="width: 84px" /></a>'].join("");
+		// }
 		function formatImage(val, obj) {
 			var src = val ? val : 'app/web/img/backend/no_image.png';
-			return ['<a href="index.php?controller=pjAdminProducts&action=pjActionUpdate&id=', obj.id ,'"><img src="', src, '" style="width: 84px" /></a>'].join("");
+			return ['<a href="index.php?controller=pjAdminProducts&action=pjActionUpdate&id=', obj.id ,
+				'"><img src="', src, '" style="width: 84px" onerror="this.onerror=null;this.src=\'app/web/img/backend/no_image.png\';" /></a>'].join("");
 		}
 		if ($("#grid").length > 0 && datagrid) {
 			var $grid = $("#grid").datagrid({

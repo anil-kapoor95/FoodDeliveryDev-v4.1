@@ -964,8 +964,44 @@
 	font-size: 14px;
 	box-shadow: none;
 }
+/* #pjWrapper .form-control:focus { border-color: var(--fd11-primary); box-shadow: 0 0 0 3px var(--fd11-primary-tint); }
+#pjWrapper textarea.form-control { height: auto; padding: 12px 14px; border-radius: 12px; }
+#pjWrapper a { color: var(--fd11-link); } */
 #pjWrapper .form-control:focus { border-color: var(--fd11-primary); box-shadow: 0 0 0 3px var(--fd11-primary-tint); }
 #pjWrapper textarea.form-control { height: auto; padding: 12px 14px; border-radius: 12px; }
+
+#pjWrapper .input-group.date {
+	display: flex;
+	align-items: center;
+	height: 46px;
+	border: 1px solid var(--fd11-border);
+	border-radius: 10px;
+	background: var(--fd11-card-bg);
+	overflow: hidden;
+}
+#pjWrapper .input-group.date:focus-within { border-color: var(--fd11-primary); box-shadow: 0 0 0 3px var(--fd11-primary-tint); }
+#pjWrapper .input-group.date .input-group-addon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 44px;
+	width: 44px;
+	height: 100%;
+	background: transparent;
+	border: none;
+	border-right: 1px solid var(--fd11-border);
+	color: var(--fd11-muted);
+	font-size: 15px;
+}
+#pjWrapper .input-group.date .form-control {
+	flex: 1 1 auto;
+	height: 100%;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
 #pjWrapper a { color: var(--fd11-link); }
 #pjWrapper input[type="checkbox"] { accent-color: var(--fd11-primary); }
 
