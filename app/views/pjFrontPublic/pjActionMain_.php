@@ -1,34 +1,23 @@
 <div class="fdLoader"></div>
-<?php
-$index = $controller->_get->toString('index');
-// Theme 11's reference UI shows one header bar spanning the full width,
-// above BOTH the menu and cart columns — themes 1-10 keep the header
-// nested inside the menu column only, as it always was, so this renders it
-// once up here for Theme 11 and is skipped again below for every other theme.
-$fdTheme11 = (string) @$tpl['option_arr']['o_theme'] === 'theme11';
-?>
+<?php $index = $controller->_get->toString('index');?>
 <br />
-<?php if ($fdTheme11): ?>
-	<?php include_once dirname(__FILE__) . '/elements/header.php';?>
-<?php endif; ?>
 <div class="row">
 	<div id="fdMain_<?php echo $index; ?>" class="col-md-8 col-sm-8 col-xs-12 pjFdPanelLeft">
-
+		
 		<div class="panel panel-default">
-			<?php if (!$fdTheme11): ?>
-				<?php include_once dirname(__FILE__) . '/elements/header.php';?>
-			<?php endif; ?>
+			<?php include_once dirname(__FILE__) . '/elements/header.php';?>
 			<div class="panel-body pjFdPanelBody">
 				<div class="panel-group" id="pjFdAccordion_<?php echo $index;?>" aria-multiselectable="true">
 					<?php
 					// Theme 11's reference UI keeps every category collapsed until the
 					// customer opens one — themes 1-10 keep their original behaviour of
 					// auto-expanding the first category, so this only changes theme11.
+					$fdTheme11Collapsed = (string) @$tpl['option_arr']['o_theme'] === 'theme11';
 					foreach($tpl['main']['category_arr'] as $k => $v)
 					{
 						if((int) $v['cnt_products'] > 0)
 						{
-							$fdCategoryOpen = !$fdTheme11 && $k==0;
+							$fdCategoryOpen = !$fdTheme11Collapsed && $k==0;
 							?>
 							<div class="panel panel-default">
 								<div class="panel-heading pjFdAccourdionOuterHead" role="tab" id="heading<?php echo $v['id']?>">

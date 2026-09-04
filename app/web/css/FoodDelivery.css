@@ -25,6 +25,19 @@
 #pjWrapper .pjFdColCustom { padding-right: 9px; padding-left: 0; }
 #pjWrapper .pjFdColCustom .form-control { padding-right: 0; padding-left: 0; }
 
+/* Card-grid product thumbnail (added for theme11's image-forward layout). Hidden by
+   default so themes 1-10, whose CSS never mentions this class, render unchanged. */
+#pjWrapper .pjFdProductMedia { display: none; }
+#pjWrapper .pjFdProductCardInfo { display: none; }
+
+/* Category header icon / item-count subtitle / "View all" affordance (theme11 only). */
+#pjWrapper .pjFdCategoryIcon,
+#pjWrapper .pjFdCategoryCount,
+#pjWrapper .pjFdCategoryViewAll { display: none; }
+
+/* Cart line-item thumbnail (theme11 only). */
+#pjWrapper .pjFdCartItemThumb { display: none; }
+
 /* ==========================================================================
 	#pjFdNav
 ========================================================================== */

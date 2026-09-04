@@ -1,11 +1,22 @@
 <div class="fdLoader"></div>
-<?php $index = $controller->_get->toString('index');?>
+<?php
+$index = $controller->_get->toString('index');
+// Theme 11's reference UI shows one header bar spanning the full width,
+// above BOTH the menu and cart columns — themes 1-10 keep the header
+// nested inside the menu column only, as it always was.
+$fdTheme11 = (string) @$tpl['option_arr']['o_theme'] === 'theme11';
+?>
 <br />
+<?php if ($fdTheme11): ?>
+	<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+<?php endif; ?>
 <div class="row">
 	<div id="fdMain_<?php echo $index; ?>" class="col-md-8 col-sm-8 col-xs-12 pjFdPanelLeft">
-		
+
 		<div class="panel panel-default">
-			<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+			<?php if (!$fdTheme11): ?>
+				<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+			<?php endif; ?>
 			<div class="panel-body  pjFdPanelBody">
 				<form id="fdLoginForm_<?php echo $index;?>" action="" method="post" class="form-horizontal" data-toggle="validator">
 					<input type="hidden" name="login_client" value="1"/>

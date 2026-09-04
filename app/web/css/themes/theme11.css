@@ -1,0 +1,1232 @@
+/* ==========================================================================
+	Theme 11 — "Market" theme
+	An image-forward grid of product cards (instead of a stacked list that
+	hides photos behind a click), a light numbered-circle step tracker, a
+	cart panel that stays in view while you scroll the menu, and a red
+	accent colour throughout. Every colour is a CSS custom property on
+	#pjWrapper below — the same 11 variables the admin panel's "Theme 11
+	colours" screen writes to (Settings > Integration Code, when Theme 11
+	is selected) — so both a hand-edit here and an admin colour change
+	repaint the whole theme from one place.
+========================================================================== */
+
+/* This file gets pasted onto arbitrary external pages (the integration code
+   snippet), so it can't assume its webfont is already loaded there — on a
+   page that already has it, text renders in the real typeface; on a page
+   that doesn't, the browser silently substitutes a different font, so the
+   same widget can look like a different font from one page to the next.
+   Importing it here guarantees the same typeface loads every time,
+   regardless of the host page. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+#pjWrapper {
+	/* The 11 admin-editable variables — same keys pjActionLoadCss() overrides. */
+	--fd11-header-bg: #353b4b;
+	--fd11-header-text: #ffffff;
+	--fd11-primary: #ee4d3d;
+	--fd11-primary-text: #ffffff;
+	--fd11-success: #22c55e;
+	--fd11-link: #2f6fed;
+	--fd11-body-bg: #f6f6f8;
+	--fd11-card-bg: #ffffff;
+	--fd11-text: #1f2328;
+	--fd11-muted: #767c86;
+	--fd11-border: #ececee;
+
+	/* Derived shades computed from the variables above via color-mix(), so a
+	   colour picked in the admin panel automatically gets a matching
+	   hover/tint state without a second field for every shade. */
+	--fd11-primary-dark: color-mix(in srgb, var(--fd11-primary) 82%, black);
+	--fd11-primary-tint: color-mix(in srgb, var(--fd11-primary) 10%, white);
+	--fd11-success-tint: color-mix(in srgb, var(--fd11-success) 15%, white);
+
+	color: var(--fd11-text);
+}
+/* !important on all three: a page this gets pasted onto may ship its own
+   font-family rules that would otherwise tie or beat these on specificity
+   (e.g. its own "body, input, button { font-family: ... }") — without
+   !important those could win depending on the host page's own CSS, which
+   is the other half of why the same widget could render in a different
+   font on different pages. Icon fonts (.fa) need their own !important too,
+   otherwise the universal rule's !important would win over their plain
+   rule and break the icons themselves. */
+#pjWrapper * { font-family: 'Manrope', 'Oxygen', Arial, sans-serif !important; }
+#pjWrapper .fa { font-family: 'FontAwesome' !important; }
+
+/* ==========================================================================
+	#Layout
+========================================================================== */
+#pjWrapper { background: transparent; }
+#pjWrapper .pjFdPanelLeft > .panel-default,
+#pjWrapper .pjFdPanelRight > .panel-default {
+	border: 1px solid var(--fd11-border);
+	border-radius: 16px;
+	background: var(--fd11-card-bg);
+	box-shadow: 0 2px 16px rgba(20, 22, 28, .05);
+	overflow: hidden;
+}
+#pjWrapper .pjFdPanelLeft .panel { overflow: inherit !important; }
+
+/* Cart column stays in view while the menu scrolls past it. */
+#pjWrapper .pjFdPanelRight { position: sticky; top: 16px; align-self: flex-start; }
+
+/* ==========================================================================
+	#Buttons
+========================================================================== */
+#pjWrapper .btn-default {
+	height: 46px;
+	padding: 0 22px;
+	border: 0;
+	border-radius: 10px;
+	background: var(--fd11-primary);
+	color: var(--fd11-primary-text);
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: .02em;
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--fd11-primary) 30%, transparent);
+	/* Bootstrap's own button line-height (1.42857) doesn't match this fixed
+	   46px height once the default 6px top/bottom padding is removed above,
+	   which left text sitting above centre instead of in the middle of the
+	   button — flex centring keeps the label centred regardless of height
+	   or whether an icon sits next to the text. */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+#pjWrapper .btn-default:hover,
+#pjWrapper .btn-default:focus { background: var(--fd11-primary-dark); color: var(--fd11-primary-text); }
+/* The browser's default focus ring is a rectangular outline that doesn't
+   match these rounded buttons and shows up after every ordinary click (a
+   click focuses the button) — swap it for a soft tinted ring that only
+   appears for keyboard/assistive-tech focus (:focus-visible), so mouse
+   clicks stay clean while keyboard navigation still shows where focus is. */
+#pjWrapper .btn-default:focus { outline: none; }
+#pjWrapper .btn-default:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--fd11-primary-tint); }
+#pjWrapper .btn-default.disabled,
+#pjWrapper .btn-default[disabled],
+#pjWrapper fieldset[disabled] .btn-default { background: #f0ece9; color: #b7b2a9; box-shadow: none; }
+#pjWrapper .btn-link { color: var(--fd11-link); font-weight: 600; }
+#pjWrapper .btn-link:hover { color: var(--fd11-primary-dark); }
+
+/* A quiet "outline" secondary button style for BACK buttons. Each flow screen
+   names its BACK button differently (fdButtonGetLogin, fdButtonBackTypes,
+   fdButtonGetCheckout, ...) but all four (order details, vouchers, checkout,
+   confirm) share the same structural pattern: BACK sits in a ".text-left"
+   column, the primary CONTINUE/PLACE ORDER action in the ".text-right"
+   column beside it — so that's what this targets instead of chasing class names. */
+#pjWrapper .text-left > .btn-default {
+	background: var(--fd11-card-bg);
+	color: var(--fd11-text);
+	border: 1px solid var(--fd11-border);
+	box-shadow: none;
+}
+#pjWrapper .text-left > .btn-default:hover { background: var(--fd11-body-bg); color: var(--fd11-text); }
+
+/* The order-total pill in the cart header reads as a quiet secondary action —
+   keep the primary colour only for the single most important action per
+   screen (checkout / order), everything else is a soft neutral pill. */
+#pjWrapper .pjFdBtnTotal,
+#pjWrapper .panel-title > .pjFdBtnTotal {
+	height: 30px;
+	padding: 0 14px;
+	border-radius: 999px;
+	background: var(--fd11-primary-tint);
+	color: var(--fd11-primary);
+	font-size: 12px;
+	font-weight: 800;
+	box-shadow: none;
+}
+#pjWrapper .pjFdBtnTotal:hover { background: var(--fd11-primary); color: var(--fd11-primary-text); }
+
+/* ==========================================================================
+	#pjFdPanelHead — dark header with the step tracker, full width
+	Rendered by pjActionMain.php once, above BOTH the menu and cart columns
+	(not nested inside the menu column's own rounded card, the way themes
+	1-10 still keep it) — so it needs its own border-radius and bottom
+	margin here instead of borrowing the parent card's rounded corners via
+	overflow:hidden the way the menu/cart cards below it do.
+========================================================================== */
+#pjWrapper .pjFdPanelHead {
+	border: 0;
+	border-radius: 16px;
+	background: var(--fd11-header-bg);
+	color: var(--fd11-header-text);
+	padding: 14px 20px;
+	margin-bottom: 16px;
+}
+#pjWrapper .pjFdPanelRight .pjFdPanelHead {
+	background: var(--fd11-card-bg);
+	color: var(--fd11-text);
+	border-bottom: 1px solid var(--fd11-border);
+	border-radius: 16px 16px 0 0;
+	margin-bottom: 0;
+}
+#pjWrapper .pjFdPanelHead .lead { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: .01em; color: var(--fd11-text); }
+#pjWrapper .pjFdPanelHead .fa-shopping-cart { color: var(--fd11-primary); }
+
+/* Cart header ("YOUR CART" + item-count pill): flex instead of a float
+   inside an h1 line box, so the pill lines up level with the icon and label
+   instead of sitting off-centre against them. */
+#pjWrapper .pjFdPanelRight .panel-title.clearfix {
+	display: flex;
+	align-items: center;
+	margin: 0;
+}
+#pjWrapper .pjFdPanelRight .panel-title .pjFdBtnTotal { float: none; margin-left: auto; }
+
+/* The step tracker sits nested inside the home-button column (Bootstrap gives
+   it col-lg-8/col-md-8 next to the account button's own col-lg-4/col-md-4),
+   which caps it at ~66% of the header instead of the full width the reference
+   shows. `display: contents` on that column drops its own box so the home
+   button and the tracker become direct flex items of the row below, and the
+   tracker (flex-basis 100%) then wraps onto its own full-width line under
+   the icon row instead of being squeezed into a fraction of it. */
+#pjWrapper .pjFdPanelHead > .row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+#pjWrapper .pjFdPanelHead > .row > div:first-child { display: contents; }
+#pjWrapper .pjFdPanelHead .pjFdHeaderRight {
+	order: 2;
+	flex: 0 0 auto;
+	width: auto;
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* Home button: a circular accent-coloured icon badge. */
+#pjWrapper .pjFdBtnHome {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--fd11-primary);
+	color: var(--fd11-primary-text);
+	box-shadow: none;
+}
+#pjWrapper .pjFdBtnHome:hover,
+#pjWrapper .pjFdBtnHome:focus { background: var(--fd11-primary-dark); color: var(--fd11-primary-text); }
+#pjWrapper .pjFdBtnHome .fa { font-size: 14px; }
+
+/* Account / logout buttons on the light header: soft neutral badge. */
+#pjWrapper .pjFdBtnAcc {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--fd11-body-bg);
+	color: var(--fd11-text);
+	box-shadow: none;
+}
+#pjWrapper .pjFdBtnAcc:hover,
+#pjWrapper .pjFdBtnAcc:focus { background: var(--fd11-primary); color: var(--fd11-primary-text); }
+
+/* ==========================================================================
+	#pjFdNav — numbered-circle step tracker
+	The step menu is markup as a Bootstrap dropdown (a trigger button plus a
+	hidden <ul class="dropdown-menu">). Rather than leaving it as a menu you
+	have to click open, it's forced permanently visible and laid out as an
+	evenly-spaced row of numbered circles with a label underneath each —
+	the trigger button (which only ever echoed the current step's own label
+	back at you) is hidden since the steps themselves now show that same
+	information. header.php splits each step's "step N - label" text into
+	a `.pjFdStepNum`/`.pjFdStepLabel` pair (see the inline script there) so
+	the number can be its own circle instead of running the whole string
+	together.
+========================================================================== */
+#pjWrapper .pjFdNav {
+	display: block;
+	vertical-align: middle;
+	width: 100%;
+	margin-top: 10px;
+	/* Direct flex item of .pjFdPanelHead > .row once the column around it
+	   collapses via display:contents above — flex-basis 100% forces it onto
+	   its own full-width line below the home/account icon row. */
+	order: 3;
+	flex: 0 0 100%;
+}
+#pjWrapper .pjFdNav .pjFdBtnNav { display: none; }
+#pjWrapper .pjFdNav .dropdown-menu {
+	display: flex !important;
+	flex-wrap: nowrap;
+	position: relative;
+	float: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	width: 100%;
+}
+#pjWrapper .pjFdNav .dropdown-menu::before {
+	content: '';
+	position: absolute;
+	top: 15px;
+	left: calc(100% / 12);
+	right: calc(100% / 12);
+	height: 2px;
+	background: var(--fd11-border);
+	z-index: 0;
+}
+#pjWrapper .pjFdNav .dropdown-menu > li { list-style: none; flex: 1 1 0; min-width: 0; text-align: center; }
+#pjWrapper .pjFdNav .pjFdBtn {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+	height: auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--fd11-muted);
+	white-space: normal;
+	max-width: 100%;
+}
+#pjWrapper .pjFdNav .pjFdBtn:hover:not(.disabled) { text-decoration: none; }
+#pjWrapper .pjFdNav .pjFdBtn:hover:not(.disabled) .pjFdStepLabel { color: var(--fd11-text); }
+/* The step tracker sits on the header's own background (dark navy by
+   default), not the page body, so its inactive/hover label colour is mixed
+   from the header's own text colour instead of the global muted grey —
+   that grey is tuned for dark text on a light body and goes near-invisible
+   on a dark header. Deriving it from --fd11-header-text keeps it legible
+   whatever colour the header is set to, light or dark. */
+#pjWrapper .pjFdPanelHead .pjFdStepLabel { color: color-mix(in srgb, var(--fd11-header-text) 60%, transparent); }
+#pjWrapper .pjFdPanelHead .pjFdNav .pjFdBtn:hover:not(.disabled) .pjFdStepLabel { color: var(--fd11-header-text); }
+#pjWrapper .pjFdStepNum {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: var(--fd11-card-bg);
+	border: 2px solid var(--fd11-border);
+	color: var(--fd11-muted);
+	font-size: 12px;
+	font-weight: 800;
+}
+#pjWrapper .pjFdStepLabel {
+	display: block;
+	font-size: 8.5px;
+	font-weight: 700;
+	letter-spacing: .02em;
+	text-transform: uppercase;
+	color: var(--fd11-muted);
+	line-height: 1.25;
+	text-align: center;
+}
+#pjWrapper .pjFdNav .pjFdBtnActive .pjFdStepNum { background: var(--fd11-primary); border-color: var(--fd11-primary); color: #fff; }
+#pjWrapper .pjFdNav .pjFdBtnActive .pjFdStepLabel { color: var(--fd11-primary); font-weight: 800; }
+#pjWrapper .pjFdNav .pjFdBtnPassed .pjFdStepNum { background: var(--fd11-success); border-color: var(--fd11-success); color: transparent; font-size: 0; position: relative; }
+#pjWrapper .pjFdNav .pjFdBtnPassed .pjFdStepNum::after {
+	content: "\f00c";
+	font-family: 'FontAwesome' !important;
+	font-size: 12px;
+	color: #fff;
+	position: absolute;
+}
+#pjWrapper .pjFdNav .pjFdBtnPassed .pjFdStepLabel { color: var(--fd11-success); }
+#pjWrapper .pjFdNav .pjFdBtn.disabled,
+#pjWrapper .pjFdNav .pjFdBtn.disabled:hover { color: var(--fd11-muted); opacity: 1; cursor: default; }
+
+/* Language switcher keeps its normal dropdown behaviour (still click-to-open). */
+#pjWrapper .pjFdLanguage .dropdown-toggle,
+#pjWrapper .btn-group.pull-right .dropdown-toggle {
+	height: 38px;
+	border: 1px solid var(--fd11-border);
+	border-radius: 999px;
+	background: var(--fd11-card-bg);
+	color: var(--fd11-text);
+	font-size: 13px;
+	font-weight: 600;
+}
+#pjWrapper .pjFdLanguage .dropdown-toggle:hover { background: var(--fd11-body-bg); }
+#pjWrapper .pjFdLanguage .dropdown-menu { border: 0; border-radius: 12px; box-shadow: 0 6px 22px rgba(20,22,28,.18); overflow: hidden; }
+#pjWrapper .pjFdLanguage .dropdown-menu a { color: var(--fd11-text); }
+#pjWrapper .pjFdLanguage .dropdown-menu a:hover,
+#pjWrapper .pjFdLanguage .dropdown-menu .pjFdBtnActive { background: var(--fd11-primary-tint); color: var(--fd11-primary); }
+
+/* ==========================================================================
+	#pjFdAccourdion — category sections
+	Each category is still an in-place expand/collapse section (its own
+	product grid opens directly beneath it), styled as a plain card-style
+	bar with an icon, an item-count subtitle, and a "View all" affordance —
+	kept visually the same whether collapsed or expanded, matching the
+	reference (categories don't flip to an inverted colour on open).
+========================================================================== */
+#pjWrapper .pjFdPanelBody { padding: 18px; background: var(--fd11-body-bg); }
+#pjWrapper .pjFdPanelLeft .panel-group .panel-heading { padding: 0; background: transparent; border: 0; }
+#pjWrapper .pjFdPanelLeft .panel-group > .panel { border: 0; margin-bottom: 14px; }
+#pjWrapper .pjFdAccourdionOuterHead { background: transparent; }
+#pjWrapper .pjFdProductsType,
+#pjWrapper .panel-default > .pjFdAccourdionOuterHead {
+	border: 1px solid var(--fd11-border);
+	border-radius: 14px !important;
+	background: var(--fd11-card-bg);
+	padding: 14px 18px;
+	font-weight: 800;
+	font-size: 15px;
+	letter-spacing: .01em;
+	color: var(--fd11-text);
+	box-shadow: none;
+	transition: border-color .15s ease;
+}
+#pjWrapper .pjFdProductsType:hover { color: var(--fd11-text); text-decoration: none; border-color: var(--fd11-primary); }
+#pjWrapper .pjFdProductsType[aria-expanded="true"] {
+	background: var(--fd11-card-bg);
+	color: var(--fd11-text);
+	border-color: var(--fd11-primary);
+	border-radius: 14px 14px 0 0 !important;
+}
+#pjWrapper .pjFdProductsType .fa-plus,
+#pjWrapper .pjFdProductsType .fa-minus { display: none; }
+#pjWrapper .pjFdPanelLeft .panel-group .panel-body { background: var(--fd11-card-bg); border: 1px solid var(--fd11-primary); border-top: 0; border-radius: 0 0 14px 14px; padding: 16px; }
+
+#pjWrapper .pjFdCategoryIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: var(--fd11-primary-tint);
+	color: var(--fd11-primary);
+	font-size: 14px;
+	margin-right: 10px;
+	vertical-align: middle;
+}
+#pjWrapper .pjFdCategoryTitleWrap { display: inline-flex; flex-direction: column; text-align: left; vertical-align: middle; }
+#pjWrapper .pjFdCategoryName { display: block; font-weight: 800; font-size: 14px; color: inherit; text-transform: uppercase; letter-spacing: .01em; line-height: 1.3; }
+/* FoodDelivery.css hides these three by default (themes 1-10 never had them) —
+   explicit `display` here is what turns them back on for theme11. */
+#pjWrapper .pjFdCategoryCount { display: block; font-size: 11px; font-weight: 600; color: var(--fd11-muted); text-transform: none; letter-spacing: 0; line-height: 1.3; }
+#pjWrapper .pjFdCategoryViewAll { display: inline-block; font-size: 11px; font-weight: 800; color: var(--fd11-primary); text-transform: uppercase; letter-spacing: .02em; margin-right: 12px; vertical-align: middle; }
+
+/* ==========================================================================
+	#pjFdProducts — image-forward card grid inside an open category
+========================================================================== */
+#pjWrapper .pjFdProducts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+#pjWrapper .pjFdProduct {
+	border: 1px solid var(--fd11-border);
+	border-radius: 16px;
+	margin-bottom: 0;
+	overflow: hidden;
+	background: var(--fd11-card-bg);
+	transition: box-shadow .15s ease, border-color .15s ease;
+}
+/* An expanded card breaks out to the full grid width so its description,
+   size picker and extras have room, instead of squeezing into one column. */
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) { grid-column: 1 / -1; border-color: var(--fd11-primary); }
+#pjWrapper .pjFdProduct:hover { box-shadow: 0 8px 24px rgba(20, 22, 28, .1); }
+
+#pjWrapper .pjFdProductHead { border: 0; background: transparent; padding: 0; }
+/* !important here beats FoodDelivery.css's higher-specificity base rule
+   (#pjWrapper .pjFdPanelLeft .panel-group .panel-heading a { display: block; padding: 15px 20px; })
+   which otherwise wins on specificity alone and silently drops this card back to block layout. */
+#pjWrapper .pjFdProductHead a,
+#pjWrapper .pjFdProductHead a:hover,
+#pjWrapper .pjFdProductHead a:focus,
+#pjWrapper .pjFdProductHead a:active {
+	display: flex !important;
+	flex-direction: column;
+	padding: 0 !important;
+	text-decoration: none !important;
+	color: inherit;
+	/* The browser's default focus ring is a rectangular blue outline that
+	   doesn't follow the card's own 16px rounded corners and reappears every
+	   time a card is clicked (a click focuses the anchor) — the card already
+	   shows it's active via the hover shadow and the expanded-row layout, so
+	   drop the default ring instead of a mismatched box around it. */
+	outline: none;
+	box-shadow: none;
+}
+/* Expanded card: the photo sits beside the name/price and the extras list,
+   with the description spanning full width underneath and the order button
+   at the end — one shared grid across what's otherwise two separate DOM
+   blocks (the clickable head with the photo, and the collapsible body with
+   the description/extras/order button below it). display:contents on every
+   wrapper in between lets each real piece of content (photo, name+price,
+   description, extras table, order button) become a direct item of one
+   grid on the <form> that already wraps both blocks — nothing is moved in
+   the markup, only how the existing pieces are laid out. */
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) form {
+	display: grid;
+	grid-template-columns: minmax(160px, 220px) 1fr;
+	grid-template-areas:
+		"media topinfo"
+		"media extras"
+		"desc  desc"
+		"order order";
+	column-gap: 18px;
+	row-gap: 10px;
+	align-items: start;
+	padding: 16px;
+}
+/* Every wrapper between the <form> grid and the real content (photo,
+   name+price, description, extras, order button) has to be display:contents
+   for the grid-area assignments below to reach them — two things were
+   breaking that chain:
+   1. .panel-title (the <h2> Bootstrap wraps the clickable head in) was
+      missing from this list entirely, so it stayed a normal block box with
+      no grid-area of its own.
+   2. .pjFdProductHead a has its own base rule using "display: flex
+      !important" (further up, to beat a FoodDelivery.css rule) — a plain
+      "display: contents" here can never win against that !important, no
+      matter how specific the selector is, so the anchor silently stayed a
+      flex column too.
+   Either one alone was enough to stop the unwrap: the grid auto-placed the
+   first broken wrapper into the "media" cell and everything inside it
+   (photo, name+price row) stacked vertically inside that one cell via
+   normal flow/flexbox instead of reaching its own assigned area — that's
+   what caused the overlap/duplication and the leftover empty space. */
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductHead,
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .panel-title,
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .panel-collapse,
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductBody,
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductContent {
+	display: contents;
+}
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductHead a {
+	display: contents !important;
+}
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) br { display: none; }
+
+#pjWrapper .pjFdProductMedia {
+	display: block;
+	position: relative;
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	background: var(--fd11-body-bg);
+	overflow: hidden;
+	flex: 0 0 auto;
+}
+/* A fixed ratio (not "auto") here so the media box holds its shape even when
+   the image is missing/broken and has no intrinsic size to derive one from. */
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductMedia {
+	grid-area: media;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	border-radius: 12px;
+}
+#pjWrapper .pjFdProductThumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Best-seller ribbon (shown for featured products) and the decorative
+   favourite toggle sit on top of the image, top-left / top-right. */
+#pjWrapper .pjFdBadgeBestSeller {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 2;
+	background: var(--fd11-text);
+	color: #fff;
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	padding: 5px 10px;
+	border-radius: 999px;
+}
+#pjWrapper .pjFdFavorite {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 2;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, .92);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #c7cad1;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(20, 22, 28, .18);
+	transition: color .15s ease, transform .15s ease;
+}
+#pjWrapper .pjFdFavorite:hover { transform: scale(1.08); }
+#pjWrapper .pjFdFavorite.pjFdFavoriteOn { color: var(--fd11-primary); }
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdBadgeBestSeller,
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdFavorite { display: none; }
+
+/* The old single name+price row is only used for the expanded (row-layout)
+   state now — the always-visible collapsed card uses .pjFdProductCardInfo
+   below instead, which also carries a description and the quick-add button. */
+#pjWrapper .pjFdProductHead .row { display: none; margin: 0; }
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductHead .row {
+	grid-area: topinfo;
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 0;
+}
+#pjWrapper .pjFdProductHead .row > [class*="col-"] { float: none; width: auto; padding: 0; }
+#pjWrapper .pjFdProductName { font-weight: 700; font-size: 14px; color: var(--fd11-text); text-align: left; }
+#pjWrapper .pjFdProductPrice { font-weight: 800; color: var(--fd11-primary); white-space: nowrap; }
+
+#pjWrapper .pjFdProductCardInfo { display: block; padding: 14px; }
+#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductCardInfo { display: none; }
+#pjWrapper .pjFdProductCardName { font-weight: 700; font-size: 14px; color: var(--fd11-text); margin-bottom: 4px; line-height: 1.3; }
+#pjWrapper .pjFdProductCardDesc {
+	font-size: 12px;
+	color: var(--fd11-muted);
+	line-height: 1.5;
+	margin: 0 0 12px;
+	min-height: 2.25em;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+#pjWrapper .pjFdProductCardFooter { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#pjWrapper .pjFdProductCardPrice { font-weight: 800; color: var(--fd11-primary); font-size: 14px; white-space: nowrap; }
+#pjWrapper .pjFdQuickAdd {
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--fd11-primary);
+	color: var(--fd11-primary-text);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 3px 10px color-mix(in srgb, var(--fd11-primary) 40%, transparent);
+	font-size: 13px;
+	transition: transform .15s ease;
+}
+#pjWrapper .pjFdProduct:hover .pjFdQuickAdd { transform: scale(1.08); }
+
+#pjWrapper .pjFdProductBody { background: var(--fd11-card-bg); border: 0 !important; }
+/* The original body image is redundant now the card's own thumbnail is always
+   visible up front — hide it in the expanded state rather than repeat it. */
+#pjWrapper .pjFdProductBodyMedia { display: none; }
+/* Both this div and its wrapper below still carry Bootstrap's gutter
+   padding (15px each side, from their leftover col-lg-8/col-lg-9 classes)
+   on top of the width fix — the two stack (this div is nested inside the
+   wrapper), so the text was sitting 30px further in from each edge than
+   the photo/extras above it, even after the width itself was corrected.
+   Zeroing both padding: 0; here and on the wrapper below lines the text up
+   flush with the rest of the card's content instead. */
+#pjWrapper .pjFdProductBodyText { width: 100%; padding: 0; }
+#pjWrapper .pjFdProductContent p {
+	color: var(--fd11-muted);
+	font-size: 13px;
+	line-height: 1.65;
+	margin: 0;
+	/* Justified so both edges line up and the ragged-right gap that was
+	   showing up on wrapped lines goes away — text-align-last keeps just the
+	   final line (usually well short of full width) from being stretched out
+	   to match, which is where justify looks worst if left on. */
+	text-align: justify;
+	text-align-last: left;
+}
+/* The description sits in its own full-width row below the photo/extras by
+   default — no longer squeezed beside a button, so a long description just
+   wraps normally instead of fighting another column for space. Two
+   exceptions move it up beside the photo instead, to use that column's
+   leftover space rather than adding a whole extra row underneath: */
+/* This wrapper still carries its original Bootstrap grid class
+   (col-lg-9/col-md-9/col-sm-12/col-xs-12, sized for the old side-by-side
+   description+order layout) — same class of bug as the extras table cells
+   above: that leftover "width: 75%" constrains the div to three quarters
+   of its grid cell no matter what grid-area gives it, leaving a dead gap
+   on the right that got a lot more obvious once the text inside went from
+   ragged-right to justified. Overriding it back to the full width of
+   whichever cell it's actually placed in (desc or descbeside below) fixes
+   both. */
+#pjWrapper .pjFdProductContent > div:has(> .pjFdProductBodyText) { grid-area: desc; width: 100%; padding: 0; }
+
+/* 1. No extras at all — nothing else would occupy that column under the
+   name/price, so the description always goes there instead of leaving it
+   empty. */
+#pjWrapper .pjFdProduct:has(.panel-collapse.in):not(:has(.pjFdProductMeta)) form {
+	grid-template-areas:
+		"media topinfo"
+		"media desc"
+		"order order";
+}
+
+/* 2. Extras ARE present, but the description is short enough to fit in the
+   space left below them — "fits" depends on the real rendered height of
+   both (which varies per product and per screen width), so this is decided
+   in JS, not a fixed line count; see header.php for the measurement. The
+   .pjFdDescFitsBeside class is only ever added there. */
+#pjWrapper .pjFdProduct.pjFdDescFitsBeside:has(.panel-collapse.in) form {
+	grid-template-areas:
+		"media topinfo"
+		"media extras"
+		"media descbeside"
+		"order order";
+}
+#pjWrapper .pjFdProduct.pjFdDescFitsBeside .pjFdProductContent > div:has(> .pjFdProductBodyText) {
+	grid-area: descbeside;
+}
+
+#pjWrapper .pjFdColCustom {
+	grid-area: order;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	justify-self: end;
+	width: auto;
+}
+#pjWrapper .pjFdColCustom select.form-control { margin-bottom: 10px; width: 200px; }
+#pjWrapper .pjFdBtnOrder { margin-top: 0; min-width: 160px; }
+
+/* Extras list sits beside the photo, in the space a short name+price row
+   alone used to leave empty underneath it. */
+#pjWrapper .pjFdProductBody > .row:has(.pjFdProductMeta) { grid-area: extras; }
+
+/* Extras table — two soft pills per row instead of one plain bordered row:
+   the name on its own, the price/×/stepper group on its own, with a gap
+   between them. A plain HTML table can't leave a gap between some cells
+   and not others (border-spacing/gap apply uniformly to every cell), so
+   the row is switched to flex — same four <td> cells, just laid out and
+   backgrounded as two separate groups instead of one continuous strip. */
+#pjWrapper .pjFdProductMeta { width: 100%; border-collapse: separate; border-spacing: 0; display: block; }
+#pjWrapper .pjFdProductMeta tbody { display: block; }
+#pjWrapper .pjFdProductMeta tr {
+	display: flex;
+	align-items: stretch;
+	background: transparent;
+	margin-bottom: 8px;
+}
+#pjWrapper .pjFdProductMeta tr:last-child { margin-bottom: 0; }
+/* The markup's Bootstrap grid classes (col-lg-7, col-lg-2, col-lg-1...) set
+   an explicit width % on every <td> — with flex-basis:auto, that specified
+   width becomes the flex-basis instead of the cell's actual content size,
+   which is what was silently capping the price/×/stepper cells too narrow
+   (flex-shrink:0 only stops shrinking below that wrong basis, it doesn't
+   restore content-based sizing). Overriding width back to auto here — this
+   selector already out-specifies the single-class Bootstrap column rules —
+   lets flex-basis resolve from content again, as the flex/shrink rules
+   below actually intend. */
+#pjWrapper .pjFdProductMeta td {
+	display: flex;
+	align-items: center;
+	background: var(--fd11-body-bg);
+	border: 0 !important;
+	padding: 8px 10px;
+	font-size: 12px;
+	width: auto;
+}
+#pjWrapper .pjFdProductMeta td:first-child {
+	flex: 1 1 auto;
+	min-width: 0;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+	font-weight: 600;
+}
+/* Only the name column (flex: 1 1 auto above) gives up width when the row
+   is tight — price / "×" / stepper stay at the width they actually need,
+   same reasoning as the counter's own flex-shrink:0 above. All four cells
+   share the same background (set on the base td rule above) and sit flush
+   against each other with no gap or radius between them, so the row reads
+   as one continuous pill — only the leftmost and rightmost corners round. */
+#pjWrapper .pjFdProductMeta td:nth-child(2) { flex-shrink: 0; justify-content: flex-end; white-space: nowrap; }
+#pjWrapper .pjFdProductMeta td:nth-child(3) { flex-shrink: 0; justify-content: center; padding-left: 4px; padding-right: 4px; }
+#pjWrapper .pjFdProductMeta td:last-child { flex-shrink: 0; border-top-right-radius: 10px; border-bottom-right-radius: 10px; padding-left: 6px; }
+
+/* This extras list now sits in a narrower column beside the photo instead
+   of spanning the card's full width, so the stepper needs to be more
+   compact than the default size (used elsewhere, e.g. inside the collapsed
+   card) to actually fit without spilling past the card's edge. */
+/* .pjFdCounter clips its own overflow (for the pill shape), which turns off
+   the usual content-based floor a flex item gets by default — without an
+   explicit flex-shrink:0 here, the surrounding flex row was free to squash
+   the whole counter down below the width its "-", number and "+" actually
+   need, silently clipping the "+" button off the end. */
+#pjWrapper .pjFdProductMeta .pjFdCounter { flex-shrink: 0; }
+#pjWrapper .pjFdProductMeta .pjFdCounter > .input-group-btn { flex: 0 0 22px; width: 22px; }
+#pjWrapper .pjFdProductMeta .pjFdCounter .btn { width: 22px; height: 24px; font-size: 12px; }
+#pjWrapper .pjFdProductMeta .pjFdCounter .form-control,
+#pjWrapper .pjFdProductMeta .pjFdCounter .fdQtyInput {
+	flex: 0 0 22px;
+	min-width: 22px;
+	max-width: 22px;
+	height: 24px;
+	font-size: 12px;
+	padding: 0;
+}
+
+/* ==========================================================================
+	#pjFdCounter — quantity steppers (pill with round +/- ends)
+========================================================================== */
+#pjWrapper .pjFdCounter { display: inline-flex; align-items: stretch; border-radius: 999px; background: var(--fd11-body-bg); overflow: hidden; }
+/* Bootstrap 3's .input-group markup assumes a table-cell layout; forcing flex above
+   without pinning each child's flex-basis lets the text input's default flex-grow
+   crush the two .input-group-btn wrappers to ~0 width, hiding the +/- buttons. */
+#pjWrapper .pjFdCounter > .input-group-btn { flex: 0 0 30px; width: 30px; display: flex; align-items: center; justify-content: center; }
+#pjWrapper .pjFdCounter .btn {
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	border-radius: 999px !important;
+	background: transparent;
+	color: var(--fd11-primary);
+	font-weight: 700;
+	box-shadow: none;
+}
+#pjWrapper .pjFdCounter .btn:hover { background: var(--fd11-primary); color: var(--fd11-primary-text); }
+#pjWrapper .pjFdCounter .form-control,
+#pjWrapper .pjFdCounter .fdQtyInput {
+	flex: 0 0 34px;
+	height: 30px;
+	min-width: 34px;
+	max-width: 34px;
+	border: 0;
+	background: transparent;
+	color: var(--fd11-text);
+	font-weight: 700;
+	font-size: 13px;
+	text-align: center;
+	box-shadow: none;
+}
+
+/* ==========================================================================
+	#pjFdPanelRight — cart summary card
+========================================================================== */
+/* Each cart line renders as a small self-contained chip/card — white,
+   rounded, gently shadowed so it lifts off the panel's light-grey body —
+   rather than a flat row blending into the background. */
+#pjWrapper .pjFdPanelRight .alert {
+	position: relative;
+	border: 1px solid var(--fd11-border);
+	border-radius: 10px;
+	background: var(--fd11-card-bg);
+	box-shadow: none;
+	padding: 8px 26px 8px 16px;
+	margin-bottom: 8px;
+}
+#pjWrapper .pjFdPanelRight .alert-dismissible { padding-right: 26px; }
+/* The remove "x" is pinned to the card's own top-right corner instead of
+   sitting in the price row — it reads as "dismiss this chip" wherever the
+   card's content wraps, and keeps the price row below reading as just
+   quantity + price, nothing else competing for that line. */
+/* FoodDelivery.css's own ".alert-dismissible .close" rule (higher specificity
+   than a plain ".close" selector, since it also names ".alert-dismissible")
+   otherwise wins the position/top/right values regardless of load order —
+   matched here so this actually lands where it's meant to. */
+#pjWrapper .pjFdPanelRight .alert-dismissible .close,
+#pjWrapper .pjFdPanelRight .close {
+	position: absolute;
+	top: 7px;
+	right: 8px;
+	opacity: .4;
+	text-shadow: none;
+	color: var(--fd11-text);
+	font-size: 13px;
+}
+#pjWrapper .pjFdPanelRight .close:hover { opacity: .85; }
+#pjWrapper .fdCartPriceCol span { font-weight: 700; color: var(--fd11-text); font-size: 13px; }
+#pjWrapper .pjFdPanelRight small { color: var(--fd11-muted); }
+
+/* Chip layout is a 3-column grid: thumbnail on the left spanning both text
+   rows, name/stepper stacked in a column right next to it (so the stepper
+   lines up under the name instead of sitting flush at the card's left edge),
+   and price on the far right, vertically centered against the whole chip.
+   ".pjFdCartItemNameCol" (thumbnail + name, originally one flex row) is
+   flattened with display:contents so its two children can each take their
+   own place in this grid instead of being locked together. */
+#pjWrapper .pjFdPanelRight .alert > .row {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-areas:
+		"thumb name    price"
+		"thumb counter price";
+	align-items: center;
+	column-gap: 12px;
+	row-gap: 4px;
+}
+#pjWrapper .pjFdPanelRight .alert > .row > .pjFdCartItemNameCol { display: contents; }
+#pjWrapper .pjFdPanelRight .alert > .row > div:has(> .pjFdCounter) { grid-area: counter; width: auto; justify-self: start; }
+#pjWrapper .pjFdPanelRight .alert > .row > .fdCartPriceCol { grid-area: price; width: auto; align-self: center; }
+#pjWrapper .pjFdPanelRight .alert > .row > .col-xs-12:last-child { grid-column: 1 / -1; width: 100%; }
+
+#pjWrapper .pjFdCartItemThumb {
+	grid-area: thumb;
+	align-self: center;
+	display: block;
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
+	overflow: hidden;
+	background: var(--fd11-body-bg);
+	border: 1px solid var(--fd11-border);
+}
+#pjWrapper .pjFdCartItemThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#pjWrapper .pjFdCartItemNameText { grid-area: name; font-size: 12px; min-width: 0; }
+#pjWrapper .pjFdCartItemNameText strong { font-weight: 700; }
+
+/* The cart card is narrow (~1/3 of the page), so the name/qty/price row needs
+   tighter grid gutters and a more compact quantity stepper than the full-width
+   product-extras table uses, or the default-size counter overflows its column. */
+#pjWrapper .pjFdPanelRight .alert > .row > [class*="col-"] { padding-left: 3px; padding-right: 3px; }
+/* Outlined pill (soft pink border, no fill) instead of the solid grey pill
+   used for the product-extras stepper elsewhere — matches the reference. */
+#pjWrapper .pjFdPanelRight .pjFdCounter {
+	background: transparent;
+	border: 1px solid color-mix(in srgb, var(--fd11-primary) 35%, transparent);
+}
+#pjWrapper .pjFdPanelRight .pjFdCounter > .input-group-btn { width: 18px; flex: 0 0 18px; }
+#pjWrapper .pjFdPanelRight .pjFdCounter .btn { width: 18px; height: 20px; font-size: 11px; }
+#pjWrapper .pjFdPanelRight .pjFdCounter .form-control,
+#pjWrapper .pjFdPanelRight .pjFdCounter .fdQtyInput,
+#pjWrapper .pjFdPanelRight .pjFdCounter .pjFdCartCnt {
+	flex: 0 0 16px;
+	min-width: 16px;
+	max-width: 16px;
+	height: 20px;
+	font-size: 11px;
+	padding: 0;
+}
+/* The remove "x" moved up to the card corner above (it's the same element
+   as ".close", styled and positioned there), so this row is just the price,
+   right-aligned. */
+/* Bootstrap's grid-column classes (this element also carries "col-lg-4" etc.)
+   set position:relative on every column — which silently became the
+   positioning context for the remove "×" nested inside it (the button is a
+   DOM child of this price column, not of the card itself), pulling the
+   corner-pinned "×" down to the price row instead of the card's top-right
+   corner. Reset to static so the card (.alert, position:relative) is what
+   top/right actually measure from. */
+#pjWrapper .fdCartPriceCol { position: static; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+
+/* #pjWrapper .pjFdPanelRight .row > .col-md-12.text-right { padding: 4px 6px; } */
+#pjWrapper .pjFdPanelRight .row > .col-md-12.text-right {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 10px;
+	padding: 4px 6px;
+	text-align: left;
+}
+#pjWrapper .pjFdPriceTotal { font-weight: 700; color: var(--fd11-text); }
+/* Tag-qualified so this only reaches the "SUBTOTAL:" / "TOTAL:" label spans
+   it's meant for — ".text-uppercase" is also the class the CHECKOUT button
+   itself carries (for the CSS text-transform, unrelated to this styling),
+   and the plain class selector below was winning on specificity and
+   painting the button's own label the same muted grey as the price labels,
+   nearly unreadable against the red button. */
+#pjWrapper .pjFdPanelRight span.text-uppercase { color: var(--fd11-muted); font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+/* Total row (last price row before the checkout button) reads larger/bolder. */
+#pjWrapper .pjFdPanelBody > .row:last-of-type .pjFdPriceTotal,
+#pjWrapper .pjFdPanelRight .row:has(+ br) .pjFdPriceTotal { font-size: 18px; color: var(--fd11-primary); }
+
+#pjWrapper .fdEmptyCart { color: var(--fd11-muted); padding: 30px 0; }
+
+/* Accepted-payment icon row under the checkout button, styled purely with
+   the existing script_online_payment_gateway/img markup wherever present. */
+#pjWrapper .pjFdPanelRight img[src*="visa" i],
+#pjWrapper .pjFdPanelRight img[src*="master" i],
+#pjWrapper .pjFdPanelRight img[src*="paypal" i] { opacity: .8; }
+
+/* ==========================================================================
+	#Forms — checkout / order details / vouchers / login / profile
+========================================================================== */
+#pjWrapper .pjFdPanelBody h2.text-muted {
+	font-size: 13px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: .06em;
+	color: var(--fd11-primary);
+	text-align: left !important;
+	border-bottom: 1px solid var(--fd11-border);
+	padding-bottom: 10px;
+}
+#pjWrapper .control-label { font-weight: 600; font-size: 13px; color: var(--fd11-text); }
+#pjWrapper .form-control {
+	height: 46px;
+	padding: 0 14px;
+	border: 1px solid var(--fd11-border);
+	border-radius: 10px;
+	background: var(--fd11-card-bg);
+	color: var(--fd11-text);
+	font-size: 14px;
+	box-shadow: none;
+}
+#pjWrapper .form-control:focus { border-color: var(--fd11-primary); box-shadow: 0 0 0 3px var(--fd11-primary-tint); }
+#pjWrapper textarea.form-control { height: auto; padding: 12px 14px; border-radius: 12px; }
+#pjWrapper a { color: var(--fd11-link); }
+#pjWrapper input[type="checkbox"] { accent-color: var(--fd11-primary); }
+
+/* ==========================================================================
+	#pjFdSummary — Theme 11's Order Total ("ORDER SUMMARY") card: the
+	itemised cart line(s) at the top, thin dividers between each group of
+	rows, and a bold/red Total row. Only rendered for theme11 (see
+	pjActionVouchers.php); themes 1-10 never emit these classes.
+========================================================================== */
+#pjWrapper .pjFdSummaryItem { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 6px 0; }
+#pjWrapper .pjFdSummaryItemInfo { display: flex; flex-direction: column; gap: 2px; }
+#pjWrapper .pjFdSummaryItemInfo strong { font-size: 14px; color: var(--fd11-text); }
+#pjWrapper .pjFdSummaryItemQty { font-size: 12px; color: var(--fd11-muted); }
+#pjWrapper .pjFdSummaryItemPrice { font-weight: 700; color: var(--fd11-text); white-space: nowrap; }
+#pjWrapper .pjFdSummaryDivider { border-top: 1px solid var(--fd11-border); margin: 16px 0; }
+#pjWrapper .pjFdSummaryTotal .col-md-6 { font-size: 18px; font-weight: 800; }
+#pjWrapper .pjFdSummaryTotal .col-md-6:last-child { color: var(--fd11-primary); }
+/* The promo-code block is reused byte-for-byte from themes 1-10 (see the
+   comment in pjActionVouchers.php) so its own "Promo code" label column
+   stays in the markup — Theme 11 shows a heading above it instead, so the
+   label column is hidden here and the field column stretches to fill the
+   row. Scoped to this wrapper only; themes 1-10 never get this class. */
+#pjWrapper .pjFdPromoTheme11 .form-group > .col-md-6:first-child { display: none; }
+#pjWrapper .pjFdPromoTheme11 .form-group > .col-md-6:last-child { width: 100%; float: none; padding: 0; }
+
+/* ==========================================================================
+	#pjFdFieldGrid — Theme 11's Personal details / Address sections show two
+	fields per row (label above field, like the reference image) instead of
+	the Bootstrap-horizontal label-beside-field rows themes 1-10 keep. Each
+	.form-group is still the same markup — the grid just resets Bootstrap's
+	col-lg-3/col-lg-9 float+width so it stacks, then lays two per row out.
+========================================================================== */
+#pjWrapper .pjFdFieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 35px; }
+#pjWrapper .pjFdFieldGrid > .form-group { display: flex; flex-direction: column; margin-bottom: 0; }
+#pjWrapper .pjFdFieldGrid > .form-group > .control-label { width: 100%; float: none; text-align: left !important; padding: 0; margin-bottom: 6px; }
+#pjWrapper .pjFdFieldGrid > .form-group > div[class*="col-"] { width: 100%; float: none; padding: 0; }
+/* Notes/company are single, unpaired fields — let them span both columns
+   instead of leaving an empty cell beside them. */
+#pjWrapper .pjFdFieldGrid > .form-group:has(textarea),
+#pjWrapper .pjFdFieldGrid > .form-group:has(.fdW100p) { grid-column: 1 / -1; }
+
+/* ==========================================================================
+	#pjFdPaymentCards — Theme 11's Payment method row of clickable cards.
+	The real <select> (id="fdPaymentMethod_...") stays in the DOM and keeps
+	working (see pjActionCheckout.php) — it's just visually hidden here so
+	the cards read as the control. Themes 1-10 never get .pjFdPaymentGroup,
+	so the dropdown there is completely untouched.
+========================================================================== */
+/* Styled like a plain field label (matching "Title"/"Name"/etc. above it in
+   Personal details) rather than a second heading — the "PAYMENT" h2 right
+   above this group already gives the section its heading, so styling this
+   the same way read as a redundant, near-identical heading stacked under
+   the first one. */
+#pjWrapper .pjFdPaymentGroup > .control-label {
+	width: 100%;
+	float: none;
+	text-align: left !important;
+	padding: 0;
+	margin-bottom: 12px;
+}
+#pjWrapper .pjFdPaymentGroup > div[class*="col-"] { width: 100%; float: none; padding: 0; display: flex; flex-direction: column; }
+/* The validator's error message sits right after the hidden <select> in the
+   markup (between it and the cards) — reorder so it reads below the cards
+   instead of above them. */
+#pjWrapper .pjFdPaymentGroup > div[class*="col-"] > .help-block { order: 2; }
+#pjWrapper .pjFdPaymentGroup > div[class*="col-"] > .pjFdPaymentCards { order: 1; }
+#pjWrapper .pjFdPaymentGroup select[id^="fdPaymentMethod_"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+#pjWrapper .pjFdPaymentCards { display: flex; flex-direction: column; gap: 12px; }
+#pjWrapper .pjFdPaymentCard {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 16px;
+	border: 1px solid var(--fd11-border);
+	border-radius: 12px;
+	cursor: pointer;
+	font-weight: 0;
+	margin: 0;
+}
+#pjWrapper .pjFdPaymentCard:hover { border-color: var(--fd11-primary-tint); }
+#pjWrapper .pjFdPaymentCardActive { border-color: var(--fd11-primary); box-shadow: 0 0 0 1px var(--fd11-primary); }
+#pjWrapper .pjFdPaymentCardRadio {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border: 2px solid var(--fd11-border);
+	flex: 0 0 auto;
+	position: relative;
+}
+#pjWrapper .pjFdPaymentCardActive .pjFdPaymentCardRadio { border-color: var(--fd11-primary); }
+#pjWrapper .pjFdPaymentCardActive .pjFdPaymentCardRadio::after {
+	content: "";
+	position: absolute;
+	top: 50%; left: 50%;
+	width: 10px; height: 10px;
+	border-radius: 50%;
+	background: var(--fd11-primary);
+	transform: translate(-50%, -50%);
+}
+#pjWrapper .pjFdPaymentCardIcon { flex: 0 0 auto; width: 22px; text-align: center; color: var(--fd11-muted); font-size: 16px; }
+#pjWrapper .pjFdPaymentCardLabel { flex: 1 1 auto; font-size: 14px; font-weight: 600; color: var(--fd11-text); }
+#pjWrapper .pjFdPaymentCardBrands { flex: 0 0 auto; display: flex; gap: 6px; font-size: 20px; color: var(--fd11-muted); }
+
+/* ==========================================================================
+	#pjFdReviewCards — Confirm order (step 6) "REVIEW YOUR ORDER" cards. The
+	underlying dt/dd pairs (see pjActionPreview.php) are the same ones themes
+	1-10 print as a plain definition list — here the dt label is hidden and
+	the dd values just stack as plain lines under an icon + card title,
+	matching the reference layout. Only rendered/styled for theme11.
+========================================================================== */
+#pjWrapper .pjFdReviewCards { display: flex; flex-direction: column; gap: 12px; }
+#pjWrapper .pjFdReviewCard {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 16px 18px;
+	border: 1px solid var(--fd11-border);
+	border-radius: 12px;
+}
+#pjWrapper .pjFdReviewCardIcon {
+	flex: 0 0 auto;
+	width: 40px;
+	height: 40px;
+	border-radius: 10px;
+	background: var(--fd11-primary-tint);
+	color: var(--fd11-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+}
+#pjWrapper .pjFdReviewCardBody { flex: 1 1 auto; min-width: 0; }
+#pjWrapper .pjFdReviewCardTitle {
+	display: block;
+	font-size: 12px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: .06em;
+	color: var(--fd11-text);
+	margin-bottom: 6px;
+}
+#pjWrapper .pjFdReviewCardBody dl.dl-horizontal { margin: 0; }
+#pjWrapper .pjFdReviewCardBody dl.dl-horizontal dt { display: none; }
+#pjWrapper .pjFdReviewCardBody dl.dl-horizontal dd {
+	margin: 0;
+	padding: 0;
+	float: none;
+	width: 100%;
+	font-size: 14px;
+	color: var(--fd11-muted);
+	line-height: 1.5;
+}
+
+/* ==========================================================================
+	#pjFdCheckoutBody — Payment page (step 5) breathing room. The base
+	.pjFdPanelBody padding (18px, shared by every page) reads cramped once
+	the fields sit in a 2-column grid, so this page gets extra left/right/
+	top/bottom padding of its own, plus a clearer rhythm between the
+	PERSONAL DETAILS / PAYMENT section headings and the fields under them.
+	Scoped to .pjFdCheckoutBody only (pjActionCheckout.php, theme11 only) —
+	every other page keeps the shared 18px padding.
+========================================================================== */
+#pjWrapper .pjFdCheckoutBody { padding: 30px; }
+#pjWrapper .pjFdCheckoutBody h2.text-muted { margin: 0 -25px 20px; }
+#pjWrapper .pjFdCheckoutBody h2.text-muted:not(:first-of-type) { margin-top: 40px; }
+#pjWrapper .pjFdCheckoutBody .pjFdPaymentGroup { margin-bottom: 24px; }
+
+@media only screen and (max-width: 767px) {
+	#pjWrapper .pjFdCheckoutBody { padding: 22px 20px; }
+	#pjWrapper .pjFdFieldGrid { grid-template-columns: 1fr; gap: 16px; }
+	#pjWrapper .pjFdCheckoutBody h2.text-muted:not(:first-of-type) { margin-top: 28px; }
+}
+
+/* ==========================================================================
+	Pickup / Delivery tabs (Types screen) — Bootstrap's .nav-pills default to
+	Bootstrap blue; recolor to match the step tracker's accent colour.
+========================================================================== */
+#pjWrapper .nav-pills { display: flex; gap: 8px; }
+#pjWrapper .nav-pills > .fdTabOuter > a.fdTypeTab {
+	display: flex;
+	align-items: center;
+	height: 42px;
+	padding: 0 20px;
+	border-radius: 999px;
+	background: var(--fd11-body-bg);
+	color: var(--fd11-muted);
+	font-weight: 700;
+	font-size: 12px;
+	letter-spacing: .03em;
+}
+#pjWrapper .nav-pills > .fdTabOuter > a.fdTypeTab:hover { background: var(--fd11-primary-tint); color: var(--fd11-primary-dark); }
+#pjWrapper .nav-pills > .fdTabOuter.active > a.fdTypeTab,
+#pjWrapper .nav-pills > .fdTabOuter.active > a.fdTypeTab:hover,
+#pjWrapper .nav-pills > .fdTabOuter.active > a.fdTypeTab:focus {
+	background: var(--fd11-primary);
+	color: var(--fd11-primary-text);
+}
+
+/* Map placeholder — a blank 300px box reads as broken before an API key is
+   configured; give it a frame so it looks intentional either way. */
+#pjWrapper [id^="fdTypeMap_"],
+#pjWrapper [id^="fdDeliveryMap_"] { border-radius: 12px; background: var(--fd11-body-bg); border: 1px solid var(--fd11-border); }
+
+/* ==========================================================================
+	#pjFdGroupVaucher
+========================================================================== */
+#pjWrapper .pjFdGroupVaucher .form-control { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+#pjWrapper .pjFdGroupVaucher .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; height: 46px; }
+
+/* ==========================================================================
+	#pjFdAlert / misc feedback
+========================================================================== */
+#pjWrapper .pjFdAlert { border: 0; border-radius: 10px; background: var(--fd11-primary-tint); color: var(--fd11-primary-dark); }
+
+/* ==========================================================================
+	#Responsive
+========================================================================== */
+@media only screen and (max-width: 991px) {
+	#pjWrapper .pjFdProducts { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
+
+@media only screen and (max-width: 767px) {
+	/* The 6-circle tracker can't shrink to fit a phone width without either
+	   truncating labels or overlapping — let it scroll horizontally instead,
+	   which keeps every step legible and tappable. */
+	#pjWrapper .pjFdNav .dropdown-menu {
+		overflow-x: auto;
+		flex-wrap: nowrap;
+		justify-content: flex-start;
+		-webkit-overflow-scrolling: touch;
+		padding-bottom: 4px;
+	}
+	#pjWrapper .pjFdNav .dropdown-menu::before { left: 36px; right: 36px; }
+	#pjWrapper .pjFdNav .dropdown-menu > li { flex: 0 0 64px; }
+	#pjWrapper .pjFdStepLabel { font-size: 8px; }
+
+	#pjWrapper .pjFdProducts { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+	#pjWrapper .pjFdProductCardInfo { padding: 10px; }
+	#pjWrapper .pjFdProductCardDesc { -webkit-line-clamp: 2; }
+	/* Below tablet width the two-column media/topinfo grid (media beside
+	   name+price+extras) no longer has room to breathe, so drop to one
+	   column and stack every area top to bottom instead. */
+	#pjWrapper .pjFdProduct:has(.panel-collapse.in) form {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"media"
+			"topinfo"
+			"extras"
+			"desc"
+			"order";
+	}
+	#pjWrapper .pjFdProduct:has(.panel-collapse.in) .pjFdProductMedia { width: 100%; aspect-ratio: 16 / 9; }
+	#pjWrapper .pjFdPanelRight { position: static; margin-top: 16px; }
+	#pjWrapper .nav-pills { flex-wrap: wrap; }
+	#pjWrapper .pjFdCategoryViewAll { display: none; }
+}
+
+@media only screen and (max-width: 480px) {
+	#pjWrapper .pjFdProducts { grid-template-columns: repeat(auto-fill, minmax(45%, 1fr)); }
+	#pjWrapper .pjFdProductCardName { font-size: 13px; }
+	#pjWrapper .pjFdProductCardDesc { font-size: 11px; min-height: 2em; }
+	#pjWrapper .pjFdCategoryTitleWrap { max-width: 62vw; }
+	#pjWrapper .pjFdCategoryName { font-size: 12px; }
+}

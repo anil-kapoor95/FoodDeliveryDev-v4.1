@@ -148,6 +148,9 @@ class pjAdminOptions extends pjAdmin
                     case 'pjActionPrintOrder':
                         $err = 'AO07';
                         break;
+                    case 'pjActionInstall':
+                        $err = 'AO08';
+                        break;
                 }
 
                 pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjAdminOptions&action=" . $this->_post->toString('next_action') . "&err=$err");
@@ -183,7 +186,7 @@ class pjAdminOptions extends pjAdmin
 			->where('foreign_id', $this->getForeignId())
 			->where('`key`', 'o_theme')
 			->limit(1)
-			->modifyAll(array('value' => 'theme1|theme2|theme3|theme4|theme5|theme6|theme7|theme8|theme9|theme10::' . $this->_post->toString('theme')));
+			->modifyAll(array('value' => 'theme1|theme2|theme3|theme4|theme5|theme6|theme7|theme8|theme9|theme10|theme11::' . $this->_post->toString('theme')));
 		
 		self::jsonResponse(array('status' => 'OK', 'code' => 200, 'text' => 'Theme has been changed.'));
 	}

@@ -4,14 +4,23 @@ $index = $controller->_get->toString('index');
 $STORAGE = @$_SESSION[$controller->defaultStore];
 $FORM = isset($_SESSION[$controller->defaultForm]) ? $_SESSION[$controller->defaultForm] : array();
 $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] : array();
+// Theme 11's reference UI shows one header bar spanning the full width,
+// above BOTH the menu and cart columns — themes 1-10 keep the header
+// nested inside the menu column only, as it always was.
+$fdTheme11 = (string) @$tpl['option_arr']['o_theme'] === 'theme11';
 ?>
 <br />
+<?php if ($fdTheme11): ?>
+	<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+<?php endif; ?>
 <div class="row">
 	<div id="fdMain_<?php echo $index; ?>" class="col-md-8 col-sm-8 col-xs-12 pjFdPanelLeft">
-		
+
 		<div class="panel panel-default">
+			<?php if (!$fdTheme11): ?>
 			<?php include_once dirname(__FILE__) . '/elements/header.php';?>
-			<div class="panel-body pjFdPanelBody">
+			<?php endif; ?>
+			<div class="panel-body pjFdPanelBody<?php echo $fdTheme11 ? ' pjFdCheckoutBody' : NULL; ?>">
 				<?php
 				if($tpl['status'] == 'OK')
 				{
@@ -109,12 +118,19 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 		
 							<br />
 							<?php
+							// Theme 11's reference UI pairs these fields two-to-a-row instead of
+							// each on its own full-width line — themes 1-10 keep the original
+							// single-column layout, so this wrapper (and its CSS) only applies
+							// when $fdTheme11 is true; the fields themselves are untouched.
+							if ($fdTheme11) { ?><div class="pjFdFieldGrid"><?php }
 							echo $ob_address;
-						} 
+							if ($fdTheme11) { ?></div><?php }
+						}
 						?>
 						<h2 class="text-muted text-center"><?php __('front_personal_details');?></h2>
-		
+
 						<br />
+						<?php if ($fdTheme11): ?><div class="pjFdFieldGrid"><?php endif; ?>
 						<?php
 						if (in_array($tpl['option_arr']['o_bf_include_title'], array(2, 3)))
 						{
@@ -199,7 +215,8 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 							<?php
 						}
 						?>
-						
+						<?php if ($fdTheme11): ?></div><?php endif; ?>
+
 						<?php
 						if($tpl['option_arr']['o_payment_disable'] == 'No')
 						{
@@ -208,11 +225,22 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 		
 							<br />
 						
-							<div class="form-group">
+							<div class="form-group<?php echo $fdTheme11 ? ' pjFdPaymentGroup' : NULL; ?>">
 								<label for="" class="col-lg-3 col-md-4 col-sm-4 control-label text-capitalize"><?php __('front_payment_medthod'); ?></label>
 								<div class="col-lg-9 col-md-8 col-sm-8">
 									<?php
 									$plugins_payment_methods = pjObject::getPlugin('pjPayments') !== NULL? pjPayments::getPaymentMethods(): array();
+									// Theme 11's reference UI shows these as a row of clickable
+									// "cards" (with a brand icon) instead of a plain <select> —
+									// themes 1-10 keep the dropdown untouched. Rather than
+									// duplicating the eligibility rules below in a second loop,
+									// every <option> this loop emits is also appended to
+									// $fdPaymentCards, and — for theme11 only — that list is
+									// rendered as cards right after the (still fully functional,
+									// just visually hidden) <select>; pjFoodDelivery.js's
+									// change/validation handlers still target the real <select>,
+									// the cards just set its value and fire "change" on it.
+									$fdPaymentCards = array();
 									$haveOnline = $haveOffline = false;
 									foreach ($tpl['payment_titles'] as $k => $v)
 									{
@@ -257,13 +285,14 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
                                                 }
                                             }
                                             ?><option value="<?php echo $k; ?>"<?php echo isset($FORM['payment_method']) && $FORM['payment_method']==$k ? ' selected="selected"' : NULL;?>><?php echo $v; ?></option><?php
+                                            $fdPaymentCards[] = array('value' => $k, 'label' => $v);
                                         }
                                         if ($haveOnline && $haveOffline)
                                         {
                                             ?>
                                         	</optgroup>
                                         	<optgroup label="<?php __('script_offline_payment', false, true); ?>">
-                                        	<?php 
+                                        	<?php
                                         }
                                         foreach ($tpl['payment_titles'] as $k => $v)
                                         {
@@ -272,6 +301,7 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
                                                 if( (int) $tpl['payment_option_arr'][$k]['is_active'] == 1)
                                                 {
                                                     ?><option value="<?php echo $k; ?>"<?php echo isset($FORM['payment_method']) && $FORM['payment_method']==$k ? ' selected="selected"' : NULL;?>><?php echo $v; ?></option><?php
+                                                    $fdPaymentCards[] = array('value' => $k, 'label' => $v);
                                                 }
                                             }
                                         }
@@ -282,10 +312,55 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 										?>
 									</select>
 									<div class="help-block with-errors"><ul class="list-unstyled"></ul></div>
+									<?php if ($fdTheme11 && !empty($fdPaymentCards)): ?>
+										<div class="pjFdPaymentCards">
+											<?php foreach ($fdPaymentCards as $fdCard): ?>
+												<?php
+												$fdCardVal = $fdCard['value'];
+												$fdCardIcon = 'fa-credit-card';
+												$fdCardBrand = false;
+												if ($fdCardVal === 'cash') { $fdCardIcon = 'fa-money'; }
+												elseif ($fdCardVal === 'bank') { $fdCardIcon = 'fa-university'; }
+												elseif (stripos($fdCardVal, 'paypal') !== false) { $fdCardIcon = 'fa-paypal'; }
+												else { $fdCardBrand = true; }
+												$fdCardActive = isset($FORM['payment_method']) && $FORM['payment_method'] === $fdCardVal;
+												?>
+												<label class="pjFdPaymentCard<?php echo $fdCardActive ? ' pjFdPaymentCardActive' : NULL; ?>" data-payment-value="<?php echo pjSanitize::html($fdCardVal); ?>">
+													<span class="pjFdPaymentCardRadio"></span>
+													<span class="pjFdPaymentCardIcon"><i class="fa <?php echo $fdCardIcon; ?>"></i></span>
+													<span class="pjFdPaymentCardLabel"><?php echo pjSanitize::html($fdCard['label']); ?></span>
+													<?php if ($fdCardBrand): ?>
+														<span class="pjFdPaymentCardBrands"><i class="fa fa-cc-visa"></i><i class="fa fa-cc-mastercard"></i></span>
+													<?php endif; ?>
+												</label>
+											<?php endforeach; ?>
+										</div>
+										<script type="text/javascript">
+										// Cards are a purely visual layer over the real <select> above
+										// (hidden by CSS, not removed) — clicking one sets the select's
+										// value and fires a jQuery "change" on it, so the existing
+										// bank-details show/hide handler and the form validator (both
+										// bound to the real <select>) keep working unmodified.
+										(function () {
+											var select = document.getElementById('fdPaymentMethod_<?php echo $index; ?>');
+											var cards = document.querySelectorAll('#fdCheckoutForm_<?php echo $index; ?> .pjFdPaymentCard');
+											if (!select || !cards.length) { return; }
+											for (var i = 0; i < cards.length; i++) {
+												cards[i].addEventListener('click', function (e) {
+													e.preventDefault();
+													select.value = this.getAttribute('data-payment-value');
+													if (window.pjQ && pjQ.$) { pjQ.$(select).trigger('change'); }
+													for (var j = 0; j < cards.length; j++) { cards[j].classList.remove('pjFdPaymentCardActive'); }
+													this.classList.add('pjFdPaymentCardActive');
+												});
+											}
+										})();
+										</script>
+									<?php endif; ?>
 								</div>
 							</div><!-- /.form-group -->
 							<?php
-						} 
+						}
 						?>
 						<div id="fdBankData_<?php echo $index;?>" style="display: <?php echo isset($FORM['payment_method']) && $FORM['payment_method'] == 'bank' ? 'block' : 'none'; ?>">
 							<div class="form-group">

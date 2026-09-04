@@ -203,7 +203,7 @@ class pjFrontCart extends pjFront
                 $pjExtraModel = pjExtraModel::factory();
                 
                 $product_arr = $pjProductModel
-	                ->select('t1.id, MIN(t2.content) AS name, MIN(t4.packing_fee) AS `packing_fee`')
+	                ->select('t1.id, MIN(t2.content) AS name, MIN(t4.packing_fee) AS `packing_fee`, MIN(t1.image) AS `image`')
 	                ->join('pjMultiLang', sprintf("t2.foreign_id = t1.id AND t2.model = 'pjProduct' AND t2.locale = '%u' AND t2.field = 'name'", $locale_id), 'left')
 	                ->join('pjProductCategory', 't3.product_id=t1.id', 'left outer')
 	                ->join('pjCategory', 't4.id=t3.category_id', 'left outer')

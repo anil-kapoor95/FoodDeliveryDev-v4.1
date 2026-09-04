@@ -36,10 +36,13 @@
 								<div class="row">
 									<div class="col-xs-12 alert alert-dismissible clearfix" role="alert">
 										<div class="row">
-											<div class="col-lg-4 col-md-4 col-sm-10 col-xs-4 text-capitalize">
-												<strong><?php echo stripslashes($product['name'])?></strong><?php echo (!empty($item['size']) ? '<br/>(' .$item['size'] . ')' : NULL);?>
+											<div class="col-lg-4 col-md-4 col-sm-10 col-xs-4 text-capitalize pjFdCartItemNameCol">
+												<!-- Card-style themes (theme11) show a small item thumbnail here; hidden
+												     by default in FoodDelivery.css so other themes are unaffected. -->
+												<span class="pjFdCartItemThumb"><img src="<?php echo !empty($product['image']) ? PJ_INSTALL_URL . $product['image'] : PJ_INSTALL_URL . PJ_IMG_PATH . 'frontend/no_image.png'; ?>" alt="" /></span>
+												<span class="pjFdCartItemNameText"><strong><?php echo stripslashes($product['name'])?></strong><?php echo (!empty($item['size']) ? '<br/>(' .$item['size'] . ')' : NULL);?></span>
 											</div><!-- /.col-lg-5 col-md-4 col-sm-10 col-xs-5 -->
-											
+
 											<div class="col-lg-4 col-md-5 col-sm-7 col-xs-4">
 												<div class="input-group pjFdCounter">
 													<span class="input-group-btn">
@@ -223,10 +226,13 @@
 								<div class="row">
 									<div class="col-xs-12 alert alert-dismissible clearfix" role="alert">
 										<div class="row">
-											<div class="col-lg-4 col-md-4 col-sm-10 col-xs-4 text-capitalize">
-												<strong><?php echo stripslashes($product['name'])?></strong><?php echo (!empty($item['size']) ? '<br/>(' .$item['size'] . ')' : NULL);?>
+											<div class="col-lg-4 col-md-4 col-sm-10 col-xs-4 text-capitalize pjFdCartItemNameCol">
+												<!-- Card-style themes (theme11) show a small item thumbnail here; hidden
+												     by default in FoodDelivery.css so other themes are unaffected. -->
+												<span class="pjFdCartItemThumb"><img src="<?php echo !empty($product['image']) ? PJ_INSTALL_URL . $product['image'] : PJ_INSTALL_URL . PJ_IMG_PATH . 'frontend/no_image.png'; ?>" alt="" /></span>
+												<span class="pjFdCartItemNameText"><strong><?php echo stripslashes($product['name'])?></strong><?php echo (!empty($item['size']) ? '<br/>(' .$item['size'] . ')' : NULL);?></span>
 											</div><!-- /.col-lg-5 col-md-4 col-sm-10 col-xs-5 -->
-											
+
 											<div class="col-lg-4 col-md-5 col-sm-7 col-xs-4">
 												<div class="input-group pjFdCounter">
 													<span class="input-group-btn">

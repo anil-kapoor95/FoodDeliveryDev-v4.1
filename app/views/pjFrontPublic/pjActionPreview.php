@@ -4,18 +4,45 @@ $index = $controller->_get->toString('index');
 $STORAGE = @$_SESSION[$controller->defaultStore];
 $FORM = isset($_SESSION[$controller->defaultForm]) ? $_SESSION[$controller->defaultForm] : array();
 $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] : array();
+// Theme 11's reference UI shows one header bar spanning the full width,
+// above BOTH the menu and cart columns — themes 1-10 keep the header
+// nested inside the menu column only, as it always was.
+$fdTheme11 = (string) @$tpl['option_arr']['o_theme'] === 'theme11';
 ?>
 <br />
+<?php if ($fdTheme11): ?>
+	<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+<?php endif; ?>
 <div class="row">
 	<div id="fdMain_<?php echo $index; ?>" class="col-md-8 col-sm-8 col-xs-12 pjFdPanelLeft">
-		
+
 		<div class="panel panel-default">
-			<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+			<?php if (!$fdTheme11): ?>
+				<?php include_once dirname(__FILE__) . '/elements/header.php';?>
+			<?php endif; ?>
 			<div class="panel-body pjFdPanelBody">
 				<div class="form-horizontal">
 				<?php
 				if($tpl['status'] == 'OK')
 				{
+					// Theme 11's reference UI collapses this whole page into one
+					// "REVIEW YOUR ORDER" heading with three icon-led cards (Delivery/
+					// Pickup, Customer, Payment method) instead of the several separate
+					// section headings themes 1-10 still show — the underlying dt/dd
+					// data below is completely unchanged either way, this just wraps it
+					// differently and hides the dt labels via CSS (.pjFdReviewCard).
+					if ($fdTheme11)
+					{
+						?>
+						<h2 class="text-muted text-center">Review your order</h2>
+						<br />
+						<div class="pjFdReviewCards">
+							<div class="pjFdReviewCard">
+								<div class="pjFdReviewCardIcon"><i class="fa <?php echo $STORAGE['type'] == 'delivery' ? 'fa-truck' : 'fa-shopping-bag'; ?>"></i></div>
+								<div class="pjFdReviewCardBody">
+									<strong class="pjFdReviewCardTitle"><?php echo $STORAGE['type'] == 'delivery' ? 'Delivery' : 'Pickup'; ?></strong>
+						<?php
+					}
 					if($STORAGE['type'] == 'pickup')
 					{
 						if(isset($STORAGE['next_day']))
@@ -30,9 +57,11 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 						    }
 						}
 						?>
+						<?php if (!$fdTheme11): ?>
 						<h2 class="text-muted text-center"><?php __('front_pickup');?></h2>
-		
+
 						<br />
+						<?php endif; ?>
 						<dl class="dl-horizontal">
 							<dt><?php __('front_location');?></dt>
 							<dd><?php echo pjSanitize::html($tpl['p_location_arr']['name']);?></dd>
@@ -68,10 +97,11 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 						    }
 						}
 						?>
+						<?php if (!$fdTheme11): ?>
 						<h2 class="text-muted text-center"><?php __('front_delivery');?></h2>
-		
+
 						<br />
-						
+						<?php endif; ?>
 						<dl class="dl-horizontal">
 							<dt><?php __('front_location');?></dt>
 							<dd><?php echo pjSanitize::html($tpl['location_arr']['name']);?></dd>
@@ -156,7 +186,18 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 							 <?php
 						}
 					}
-					
+					if ($fdTheme11)
+					{
+						?>
+								</div><!-- /.pjFdReviewCardBody -->
+							</div><!-- /.pjFdReviewCard -->
+							<div class="pjFdReviewCard">
+								<div class="pjFdReviewCardIcon"><i class="fa fa-user"></i></div>
+								<div class="pjFdReviewCardBody">
+									<strong class="pjFdReviewCardTitle">Customer</strong>
+						<?php
+					}
+
 					ob_start();
 					if (in_array($tpl['option_arr']['o_bf_include_address_1'], array(2, 3)))
 					{
@@ -216,18 +257,26 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 					ob_end_clean();
 					if (!empty($ob_address))
 					{
+						if (!$fdTheme11)
+						{
+							?>
+							<br />
+							<h2 class="text-muted text-center"><?php __('front_address');?></h2>
+
+							<br />
+							<?php
+						}
+						echo $ob_address;
+					}
+					if (!$fdTheme11)
+					{
 						?>
-						<br />
-						<h2 class="text-muted text-center"><?php __('front_address');?></h2>
-			
+						<h2 class="text-muted text-center"><?php __('front_personal_details');?></h2>
+
 						<br />
 						<?php
-						echo $ob_address;
-					} 
+					}
 					?>
-					<h2 class="text-muted text-center"><?php __('front_personal_details');?></h2>
-		
-					<br />
 					<?php
 					if (in_array($tpl['option_arr']['o_bf_include_title'], array(2, 3)))
 					{
@@ -285,15 +334,33 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 						<?php
 					}
 					?>
-					
+					<?php if ($fdTheme11): ?>
+							</div><!-- /.pjFdReviewCardBody -->
+						</div><!-- /.pjFdReviewCard -->
+					<?php endif; ?>
+
 					<?php
 					if($tpl['option_arr']['o_payment_disable'] == 'No')
 					{
 						$payment_methods = $tpl['payment_titles'];
+						if ($fdTheme11)
+						{
+							?>
+							<div class="pjFdReviewCard">
+								<div class="pjFdReviewCardIcon"><i class="fa fa-credit-card"></i></div>
+								<div class="pjFdReviewCardBody">
+									<strong class="pjFdReviewCardTitle">Payment method</strong>
+							<?php
+						}
+						else
+						{
+							?>
+							<h2 class="text-muted text-center"><?php __('front_payment', false, false); ?></h2>
+
+							<br />
+							<?php
+						}
 						?>
-						<h2 class="text-muted text-center"><?php __('front_payment', false, false); ?></h2>
-		
-						<br />
 						<dl class="dl-horizontal">
 							<dt><?php __('front_payment_medthod'); ?></dt>
 							<dd><?php echo $payment_methods[$FORM['payment_method']]; ?></dd>
@@ -305,7 +372,19 @@ $CLIENT = $controller->isFrontLogged() ? @$_SESSION[$controller->defaultClient] 
 							</dl><!-- /.dl-horizontal -->
 						</div>
 						<?php
-						
+						if ($fdTheme11)
+						{
+							?>
+								</div><!-- /.pjFdReviewCardBody -->
+							</div><!-- /.pjFdReviewCard -->
+							<?php
+						}
+					}
+					if ($fdTheme11)
+					{
+						?>
+						</div><!-- /.pjFdReviewCards -->
+						<?php
 					}
 					?>
 					<br/>

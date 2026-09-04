@@ -23,7 +23,7 @@ class pjFrontEnd extends pjFront
 	    $theme = $this->option_arr['o_theme'];
 	    if($this->_get->check('layout'))
 	    {
-	        if(in_array($this->_get->toString('layout'), array('theme1', 'theme2', 'theme3', 'theme4', 'theme5', 'theme6', 'theme7', 'theme8', 'theme9', 'theme10')))
+	        if(in_array($this->_get->toString('layout'), array('theme1', 'theme2', 'theme3', 'theme4', 'theme5', 'theme6', 'theme7', 'theme8', 'theme9', 'theme10', 'theme11')))
 	        {
 	            $theme = $this->_get->toString('layout');
 	        }
@@ -58,9 +58,44 @@ class pjFrontEnd extends pjFront
 	                ) . "\n";
 	        }
 	    }
+
+	    // Theme 11 admin-configurable colours: emitted last so the cascade lets any saved
+	    // value override theme11.css's own defaults for the same custom property, and any
+	    // field left blank/invalid simply falls back to the static file's default.
+	    if ($theme === 'theme11')
+	    {
+	        $color_vars = array(
+	            'o_theme11_color_header_bg'    => '--fd11-header-bg',
+	            'o_theme11_color_header_text'  => '--fd11-header-text',
+	            'o_theme11_color_primary'      => '--fd11-primary',
+	            'o_theme11_color_primary_text' => '--fd11-primary-text',
+	            'o_theme11_color_success'      => '--fd11-success',
+	            'o_theme11_color_link'         => '--fd11-link',
+	            'o_theme11_color_body_bg'      => '--fd11-body-bg',
+	            'o_theme11_color_card_bg'      => '--fd11-card-bg',
+	            'o_theme11_color_text'         => '--fd11-text',
+	            'o_theme11_color_muted'        => '--fd11-muted',
+	            'o_theme11_color_border'       => '--fd11-border',
+	        );
+
+	        $vars = '';
+	        foreach ($color_vars as $option_key => $css_var)
+	        {
+	            if (!empty($this->option_arr[$option_key]) && preg_match('/^#[0-9a-fA-F]{3,8}$/', $this->option_arr[$option_key]))
+	            {
+	                $vars .= "\t" . $css_var . ': ' . $this->option_arr[$option_key] . ";\n";
+	            }
+	        }
+
+	        if ($vars !== '')
+	        {
+	            echo "#pjWrapperFoodDelivery_theme11 {\n" . $vars . "}\n";
+	        }
+	    }
+
 	    exit;
 	}
-	
+
 	public function pjActionLoad()
 	{
 	    $this->setAjax(false);
